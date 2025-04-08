@@ -32,7 +32,8 @@ WORKDIR /app
 
 COPY Gemfile Gemfile.lock ./
 RUN apk add --no-cache build-base libffi-dev yaml-dev zlib-dev gcompat
-RUN bundle config set force_ruby_platform true && bundle install
+RUN gem install bundler -v 2.5.16
+RUN bundle _2.5.16_ config set force_ruby_platform true && bundle _2.5.16_ install
 
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install
