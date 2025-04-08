@@ -31,7 +31,8 @@ RUN npm install -g pnpm@${PNPM_VERSION}
 WORKDIR /app
 
 COPY Gemfile Gemfile.lock ./
-RUN bundle config set --local force_ruby_platform true && bundle install -j 4 -r 3
+RUN bundle config set --locaRUN bundle config set --local force_ruby_platform true && bundle install -j 4
+
 
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install
