@@ -1,0 +1,8 @@
+# Ignore everything unnecessary
+.git
+log/*
+tmp/*
+node_modules
+.env
+.env.*
+docker-compose*
