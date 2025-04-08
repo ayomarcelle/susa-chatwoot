@@ -1,12 +1,11 @@
 FROM ruby:3.3.3-alpine3.19
 
-ARG NODE_VERSION="23.7.0"
-ARG PNPM_VERSION="10.2.0"
+ARG NODE_VERSION="18.18.0"
+ARG PNPM_VERSION="8.15.4"
 
 ENV NODE_VERSION=${NODE_VERSION}
 ENV PNPM_VERSION=${PNPM_VERSION}
 ENV BUNDLE_WITHOUT="development:test"
-ENV BUNDLER_VERSION=2.5.16
 ENV RAILS_ENV=production
 ENV NODE_ENV=production
 ENV RAILS_SERVE_STATIC_FILES=true
@@ -23,25 +22,24 @@ RUN apk update && apk add --no-cache \
   openssl imagemagick vips ruby-full ruby-dev gcc make musl-dev linux-headers \
   libffi-dev yaml-dev zlib-dev gcompat
 
-# Install bundler version explicitly
+# Install Bundler
 RUN gem install bundler -v 2.5.16
 
-# Install Node manually
-RUN curl -fsSL https://unofficial-builds.nodejs.org/download/release/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64-musl.tar.xz | tar -xJf - -C /usr/local --strip-components=1
+# Install Node manually (musl-compatible)
+RUN curl -fsSL https://unofficial-builds.nodejs.org/download/release/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64-musl.tar.xz \
+  | tar -xJf - -C /usr/local --strip-components=1
 
 # Install PNPM
 RUN npm install -g pnpm@${PNPM_VERSION}
 
 WORKDIR /app
 
-# Copy Ruby gem files
+# Install Ruby gems
 COPY Gemfile Gemfile.lock ./
+RUN bundle config set force_ruby_platform true \
+ && bundle install
 
-# Configure bundler and install
-RUN bundle _2.5.16_ config set force_ruby_platform true
-RUN bundle _2.5.16_ install
-
-# Copy JS files and install frontend deps
+# Install Node packages
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install
 
@@ -49,7 +47,8 @@ RUN pnpm install
 COPY . .
 
 # Precompile assets
-RUN mkdir -p /app/log && SECRET_KEY_BASE=dummy bundle exec rake assets:precompile
+RUN mkdir -p /app/log \
+ && SECRET_KEY_BASE=dummy bundle exec rake assets:precompile
 
 EXPOSE 3000
 
