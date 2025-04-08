@@ -6,7 +6,7 @@ ARG PNPM_VERSION="10.2.0"
 ENV NODE_VERSION=${NODE_VERSION}
 ENV PNPM_VERSION=${PNPM_VERSION}
 ENV BUNDLE_WITHOUT="development:test"
-ENV BUNDLER_VERSION=2.5.11
+ENV BUNDLER_VERSION=2.5.16
 ENV RAILS_ENV=production
 ENV NODE_ENV=production
 ENV RAILS_SERVE_STATIC_FILES=true
@@ -20,7 +20,10 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN apk update && apk add --no-cache \
   curl git xz tzdata build-base postgresql-dev postgresql-client \
   openssl imagemagick vips ruby-full ruby-dev gcc make musl-dev linux-headers \
-  && gem install bundler
+  libffi-dev yaml-dev zlib-dev gcompat
+
+# Install bundler version required by lockfile
+RUN gem install bundler -v ${BUNDLER_VERSION}
 
 # Install Node manually
 RUN curl -fsSL https://unofficial-builds.nodejs.org/download/release/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64-musl.tar.xz | tar -xJf - -C /usr/local --strip-components=1
@@ -31,9 +34,9 @@ RUN npm install -g pnpm@${PNPM_VERSION}
 WORKDIR /app
 
 COPY Gemfile Gemfile.lock ./
-RUN apk add --no-cache build-base libffi-dev yaml-dev zlib-dev gcompat
-RUN gem install bundler -v 2.5.16
-RUN bundle _2.5.16_ config set force_ruby_platform true && bundle _2.5.16_ install
+
+RUN bundle _${BUNDLER_VERSION}_ config set force_ruby_platform true && \
+    bundle _${BUNDLER_VERSION}_ install
 
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install
