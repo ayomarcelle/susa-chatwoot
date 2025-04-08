@@ -31,6 +31,7 @@ RUN npm install -g pnpm@${PNPM_VERSION}
 WORKDIR /app
 
 COPY Gemfile Gemfile.lock ./
+RUN apk add --no-cache build-base libffi-dev yaml-dev zlib-dev gcompat
 RUN bundle config set force_ruby_platform true && bundle install
 
 COPY package.json pnpm-lock.yaml ./
