@@ -1,4 +1,4 @@
-FROM ruby:3.3.3-alpine3.19
+FROM ruby:3.2.2-alpine3.17
 
 ARG NODE_VERSION="18.18.0"
 ARG PNPM_VERSION="8.15.4"
