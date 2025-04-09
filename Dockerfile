@@ -20,8 +20,8 @@ RUN apk add --no-cache \
   vips \
   nodejs=18.19.1-r0 \
   npm \
-  && gem install bundler -v $BUNDLER_VERSION
-
+  && gem install bundler -v 2.5.16
+  
 WORKDIR /app
 
 # Copy Ruby dependencies
