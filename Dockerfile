@@ -10,39 +10,38 @@ ENV RAILS_ENV=production \
     RAILS_LOG_TO_STDOUT=true \
     EXECJS_RUNTIME=Disabled
 
-# Install system dependencies
-RUN apk update && apk add --no-cache \
-  build-base \
-  curl \
-  git \
-  tzdata \
-  postgresql-dev \
-  nodejs \
-  yarn \
-  vips \
-  libffi-dev \
-  yaml-dev \
-  zlib-dev
+# Install required system packages
+RUN apk add --no-cache \
+    build-base \
+    postgresql-dev \
+    git \
+    curl \
+    tzdata \
+    nodejs \
+    yarn \
+    vips \
+    libffi-dev \
+    yaml-dev \
+    zlib-dev
 
-# Install bundler version required by Gemfile.lock
+# Install required bundler version
 RUN gem install bundler -v "$BUNDLER_VERSION"
 
-# Set up app directory
 WORKDIR /app
 
-# Copy Ruby dependencies
+# Copy and install Ruby deps
 COPY Gemfile Gemfile.lock ./
 RUN bundle _${BUNDLER_VERSION}_ config set force_ruby_platform true && \
     bundle _${BUNDLER_VERSION}_ install
 
-# Copy Node.js dependencies
+# Copy and install Node deps
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
-# Copy rest of app
+# Copy app files
 COPY . .
 
-# Precompile assets
+# Compile assets
 RUN mkdir -p /app/log && \
     SECRET_KEY_BASE=dummytoken bundle exec rake assets:precompile
 
