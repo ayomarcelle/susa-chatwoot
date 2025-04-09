@@ -1,50 +1,43 @@
-FROM ruby:3.2.2-alpine3.17
+FROM ruby:3.2.2-alpine
 
-ENV RAILS_ENV=production \
-    NODE_ENV=production \
-    BUNDLER_VERSION=2.5.16 \
-    BUNDLE_WITHOUT="development:test" \
-    BUNDLE_FORCE_RUBY_PLATFORM=1 \
-    BUNDLE_PATH="/gems" \
-    RAILS_SERVE_STATIC_FILES=true \
-    RAILS_LOG_TO_STDOUT=true \
-    EXECJS_RUNTIME=Disabled
+# Set envs
+ENV RAILS_ENV=production
+ENV NODE_ENV=production
+ENV BUNDLER_VERSION=2.5.6
+ENV BUNDLE_WITHOUT="development:test"
+ENV BUNDLE_PATH="/gems"
+ENV BUNDLE_FORCE_RUBY_PLATFORM=1
+ENV RAILS_SERVE_STATIC_FILES=true
+ENV RAILS_LOG_TO_STDOUT=true
 
-# Install required system packages
-RUN apk add --no-cache \
-    build-base \
-    postgresql-dev \
-    git \
-    curl \
-    tzdata \
-    nodejs \
-    yarn \
-    vips \
-    libffi-dev \
-    yaml-dev \
-    zlib-dev
+# Install dependencies
+RUN apk update && apk add --no-cache \
+  build-base postgresql-dev git curl tzdata \
+  nodejs npm yarn vips libffi-dev yaml-dev zlib-dev
 
-# Install required bundler version
-RUN gem install bundler -v "$BUNDLER_VERSION"
+# Install bundler
+RUN gem install bundler -v $BUNDLER_VERSION
 
+# Create app dir
 WORKDIR /app
 
-# Copy and install Ruby deps
+# Copy gem files and install gems
 COPY Gemfile Gemfile.lock ./
-RUN bundle _${BUNDLER_VERSION}_ config set force_ruby_platform true && \
-    bundle _${BUNDLER_VERSION}_ install
+RUN bundle _2.5.6_ config set force_ruby_platform true && \
+    bundle _2.5.6_ install
 
-# Copy and install Node deps
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+# Copy node dependencies and install with pnpm
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm && pnpm install
 
-# Copy app files
+# Copy the rest of the app
 COPY . .
 
-# Compile assets
-RUN mkdir -p /app/log && \
-    SECRET_KEY_BASE=dummytoken bundle exec rake assets:precompile
+# Precompile assets
+RUN SECRET_KEY_BASE=dummy bundle exec rake assets:precompile
 
+# Expose port
 EXPOSE 3000
 
+# Start command
 CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]
